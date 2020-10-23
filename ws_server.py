@@ -73,11 +73,3 @@ def run_server(port):
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-
-
-def parse_message(mesg):
-    pass
-    # parse message
-    # get name
-    # get timestamp
-    # get message body
