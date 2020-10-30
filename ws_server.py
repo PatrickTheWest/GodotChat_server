@@ -8,26 +8,18 @@ import json
 USER_LIST = set()
 
 
-async def hello(websocket, path):
-    name = await websocket.recv()
-    print(name)
-    await websocket.send(name)
-
-    while True:
-        mesg = await websocket.recv()
-        print(f"Received: {mesg}")
-        await websocket.send(f"{mesg}")
-
-
 async def register_user(websocket):
+    print("Registered User")
     USER_LIST.add(websocket)
 
 
 async def unregister_user(websocket):
+    print("Unregistered User")
     USER_LIST.remove(websocket)
 
 
 async def notify_users(mesg):
+    print("sending: ", mesg, " to all users")
     if USER_LIST:
         await asyncio.wait([user.send(mesg) for user in USER_LIST])
 
@@ -37,10 +29,15 @@ async def entry_point(websocket, path):
     await register_user(websocket)
     try:
         greeting = await websocket.recv()
+        # Messages sent from Godot end up as bytes objects and have trouble sending back to JavaScript
+        if isinstance(greeting, bytes):
+            greeting = str(greeting, "utf-8")
+        print(greeting)
         await notify_users(greeting)
 
         while True:
             mesg_recv = await websocket.recv()
+            print("recieved: ", mesg_recv)
             mesg_send = process_json(mesg_recv)
             await notify_users(mesg_send)
 
@@ -69,7 +66,7 @@ def run_server(port):
     """
 
     # Comment this if running SSL
-    start_server = websockets.serve(entry_point, "localhost", port)
+    start_server = websockets.serve(entry_point, "", port)
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
